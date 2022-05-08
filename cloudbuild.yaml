@@ -1,0 +1,35 @@
+steps:
+  # Build the container image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "${_REGISTRY_URL}/$PROJECT_ID/${_REGISTRY}/helloworld:$SHORT_SHA",
+        "-t",
+        "${_REGISTRY_URL}/$PROJECT_ID/${_REGISTRY}/helloworld:latest",
+        ".",
+      ]
+  # Push the container image to Container Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "${_REGISTRY_URL}/$PROJECT_ID/${_REGISTRY}/helloworld"]
+  # Deploy container image to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "helloworld",
+        "--project",
+        "${_PROJECT_NAME}",
+        "--platform",
+        "managed",
+        "--region",
+        "${_REGION}",
+        "--image",
+        "${_REGISTRY_URL}/$PROJECT_ID/${_REGISTRY}/helloworld:$SHORT_SHA",
+        "--port",
+        "3000",
+        "--allow-unauthenticated",
+      ]
